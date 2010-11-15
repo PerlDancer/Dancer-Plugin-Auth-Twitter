@@ -1,30 +1,141 @@
 package Dancer::Plugin::Auth::Twitter;
-
-use warnings;
 use strict;
+use warnings;
 
+use Dancer ':syntax';
+use Dancer::Plugin;
+use Carp 'croak';
+use Net::Twitter;
+
+our $VERSION = 0.01;
+
+# Net::Twitter singleton, accessible via 'twitter'
+my $_twitter;
+sub twitter { $_twitter }
+register 'twitter' => \&twitter;
+
+# init method, to create the Net::Twitter object
+my $consumer_key;
+my $consumer_secret;
+my $callback_url;
+
+register 'auth_twitter_init' => sub {
+    my $config = plugin_setting;
+    $consumer_secret = $config->{consumer_secret};
+    $consumer_key    = $config->{consumer_key};
+    $callback_url    = $config->{callback_url};
+
+    for my $param (qw/consumer_key consumer_secret callback_url/) {
+        croak "'$param' is expected but not found in configuration" 
+            unless $config->{$param};
+    }
+
+    warn "new twitter with $consumer_key , $consumer_secret, $callback_url";
+
+    $_twitter = Net::Twitter->new({ 
+        'traits'            => ['API::REST', 'OAuth'],
+        'consumer_key'      => $consumer_key, 
+        'consumer_secret'   => $consumer_secret,
+    });
+
+};
+
+# define a route handler that bounces to the OAuth authentication process
+register 'auth_twitter_authenticate_url' => sub {
+    if (not defined twitter) {
+        croak "auth_twitter_init must be called first";
+    }
+
+    my $uri = twitter->get_authorization_url( 
+        'callback' => $callback_url
+    );
+
+    session request_token        => twitter->request_token;
+    session request_token_secret => twitter->request_token_secret;
+    session access_token         => '';
+    session access_token_secret  => '';
+
+    debug "auth URL : $uri";
+    return $uri;
+};
+
+get '/auth/twitter/callback' => sub {
+
+    if (   !session('request_token')
+        || !session('request_token_secret')
+        || !params->{'oauth_verifier'})
+    {
+        return send_error 'no request token present, or no verifier';
+    }
+
+    my $token               = session('request_token');
+    my $token_secret        = session('request_token_secret');
+    my $access_token        = session('access_token');
+    my $access_token_secret = session('access_token_secret');
+    my $verifier            = params->{'oauth_verifier'};
+
+    if (!$access_token && !$access_token_secret) {
+        twitter->request_token($token);
+        twitter->request_token_secret($token_secret);
+        ($access_token, $access_token_secret) = twitter->request_access_token('verifier' => $verifier);
+
+        # this is in case we need to register the user after the oauth process
+        session access_token        => $access_token;
+        session access_token_secret => $access_token_secret;
+    }
+
+    # get the user
+    twitter->access_token($access_token);
+    twitter->access_token_secret($access_token_secret);
+
+    my $twitter_user_hash;
+    eval {
+        $twitter_user_hash = twitter->verify_credentials();
+    };
+
+    if ($@ || !$twitter_user_hash) {
+        core("no twitter_user_hash or error: ".$@);
+        return redirect '/';
+    }
+
+    $twitter_user_hash->{'access_token'} = $access_token;
+    $twitter_user_hash->{'access_token_secret'} = $access_token_secret;
+
+    # save the user
+    session 'twitter_user'                => $twitter_user_hash;
+    session 'twitter_access_token'        => $access_token,
+    session 'twitter_access_token_secret' => $access_token_secret,
+
+    redirect '/';
+};
+ 
+register_plugin;
+
+__END__
 =head1 NAME
 
-Dancer::Plugin::Auth::Twitter - The great new Dancer::Plugin::Auth::Twitter!
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.01';
-
+Dancer::Plugin::Auth::Twitter - Authenticate with Twitter
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
+    package SomeDancerApp;
+    use Dancer ':syntax';
     use Dancer::Plugin::Auth::Twitter;
 
-    my $foo = Dancer::Plugin::Auth::Twitter->new();
+    auth_twitter_init();
+
+    before sub {
+        if (not session('twitter_user')) {
+            redirect auth_twitter_authenticate_url;
+        }
+    };
+
+    get '/' => sub {
+        "welcome, ".session('twitter_user')->{'screen_name'};
+    };
+
+    get '/fail' => sub { "FAIL" };
+
     ...
 
 =head1 EXPORT
