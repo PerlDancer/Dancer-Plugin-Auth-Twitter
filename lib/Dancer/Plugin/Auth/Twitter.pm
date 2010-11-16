@@ -61,6 +61,8 @@ register 'auth_twitter_authenticate_url' => sub {
 
 get '/auth/twitter/callback' => sub {
 
+    debug "in callback...";
+
     if (   !session('request_token')
         || !session('request_token_secret')
         || !params->{'oauth_verifier'})
@@ -95,7 +97,7 @@ get '/auth/twitter/callback' => sub {
 
     if ($@ || !$twitter_user_hash) {
         core("no twitter_user_hash or error: ".$@);
-        return redirect '/';
+        return redirect '/fail';
     }
 
     $twitter_user_hash->{'access_token'} = $access_token;
@@ -106,6 +108,7 @@ get '/auth/twitter/callback' => sub {
     session 'twitter_access_token'        => $access_token,
     session 'twitter_access_token_secret' => $access_token_secret,
 
+    debug "got twitter_user : ".to_yaml($twitter_user_hash);
     redirect '/';
 };
  
