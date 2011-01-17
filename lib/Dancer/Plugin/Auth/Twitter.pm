@@ -7,7 +7,7 @@ use Dancer::Plugin;
 use Carp 'croak';
 use Net::Twitter;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 # Net::Twitter singleton, accessible via 'twitter'
 my $_twitter;
