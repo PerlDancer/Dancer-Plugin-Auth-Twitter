@@ -1,5 +1,14 @@
 Revision history for Dancer-Plugin-Auth-Twitter
 
-0.01    Date/time
-        First version, released on an unsuspecting world.
+0.02	2011-01-17
+	
+	[ Yanick Champoux ]
+	* allow customization of callback redirection URIs
+
+	[ Alexis Sukrieh ]
+	* Some release tweaks
+
+0.01    2010-12-20
+
+	* First version, release as part of the Perl Dancer Advent Calendar 2010
 

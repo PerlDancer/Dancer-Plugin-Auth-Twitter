@@ -7,7 +7,7 @@ use Dancer::Plugin;
 use Carp 'croak';
 use Net::Twitter;
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 # Net::Twitter singleton, accessible via 'twitter'
 my $_twitter;
@@ -18,12 +18,17 @@ register 'twitter' => \&twitter;
 my $consumer_key;
 my $consumer_secret;
 my $callback_url;
+my $callback_success;
+my $callback_fail;
 
 register 'auth_twitter_init' => sub {
     my $config = plugin_setting;
     $consumer_secret = $config->{consumer_secret};
     $consumer_key    = $config->{consumer_key};
     $callback_url    = $config->{callback_url};
+
+    $callback_success = $config->{callback_success} || '/';
+    $callback_fail    = $config->{callback_fail}    || '/fail';
 
     for my $param (qw/consumer_key consumer_secret callback_url/) {
         croak "'$param' is expected but not found in configuration" 
@@ -97,7 +102,7 @@ get '/auth/twitter/callback' => sub {
 
     if ($@ || !$twitter_user_hash) {
         core("no twitter_user_hash or error: ".$@);
-        return redirect '/fail';
+        return redirect $callback_fail;
     }
 
     $twitter_user_hash->{'access_token'} = $access_token;
@@ -108,8 +113,7 @@ get '/auth/twitter/callback' => sub {
     session 'twitter_access_token'        => $access_token,
     session 'twitter_access_token_secret' => $access_token_secret,
 
-    debug "got twitter_user : ".to_yaml($twitter_user_hash);
-    redirect '/';
+    redirect $callback_success;
 };
  
 register_plugin;
@@ -141,72 +145,114 @@ Dancer::Plugin::Auth::Twitter - Authenticate with Twitter
 
     ...
 
+=head1 CONCEPT
+
+This plugin provides a simple way to authenticate your users through Twitter's
+OAuth API. It provides you with a helper to build easily a redirect to the
+authentication URI, defines automatically a callback route handler and saves the
+authenticated user to your session when done.
+
+=head1 PREREQUESITES
+
+In order for this plugin to work, you need the following:
+
+=over 4 
+
+=item * Twitter application
+
+Anyone can register a Twitter application at L<http://dev.twitter.com/>. When
+done, make sure to configure the application as a I<Web> application.
+
+=item * Configuration
+
+You need to configure the plugin first: copy your C<consumer_key> and C<consumer_secret> 
+(provided by Twitter) to your Dancer's configuration under
+C<plugins/Auth::Twitter>:
+
+    # config.yml
+    ...
+    plugins:
+      "Auth::Twitter":
+        consumer_key:     "1234"
+        consumer_secret:  "abcd"
+        callback_url:     "http://localhost:3000/auth/twitter/callback"
+        callback_success: "/"
+        callback_fail:    "/fail"
+
+C<callback_success> and C<callback_fail> are optional and default to 
+'/' and '/fail', respectively.
+
+Note that you also need to provide your callback url, whose route handler is automatically
+created by the plugin.
+
+=item * Session backend
+
+For the authentication process to work, you need a session backend, in order for
+the plugin to store the authenticated user's information.
+
+Use the session backend of your choice, it doesn't make a difference, see
+L<Dancer::Session> for details about supported session engines, or
+L<http://search.cpan.org/search?query=Dancer-Session|search the CPAN for new ones>.
+
+=back
+
 =head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+The plugin exports the following symbols to your application's namespace:
 
-=head1 SUBROUTINES/METHODS
+=head2 twitter
 
-=head2 function1
+The plugin uses a L<Net::Twitter> object to do its job. You can access this
+object with the C<twitter> symbol, exported by the plugin.
 
-=cut
+=head2 auth_twitter_init
 
-sub function1 {
-}
+This function should be called before your route handlers, in order to
+initialize the underlying L<Net::Twitter> object. It will read your
+configuration and create a new L<Net::Twitter> instance.
 
-=head2 function2
+=head2 auth_twitter_authenticate_url
 
-=cut
+This function returns an authenticate URI for redirecting unauthenticated users.
+You should use this in a before filter like the following:
 
-sub function2 {
-}
+    before sub {
+        # we don't want to bounce for ever!
+        return if request->path =~ m{/auth/twitter/callback};
+    
+        if (not session('twitter_user')) {
+            redirect auth_twitter_authenticate_url();
+        }
+    };
+
+When the user authenticate with Twitter's OAuth interface, she's going to be
+bounced back to C</auth/twitter/callback>.
+
+=head1 ROUTE HANDLERS
+
+The plugin defines the following route handler automatically
+
+=head2 /auth/twitter/callback
+
+This route handler is responsible for catching back a user that has just
+authenticated herself with Twitter's OAuth. The route handler saves tokens and
+user information in the session and then redirects the user to the URI
+specified by C<callback_success>.  
+
+If the validation of the token returned by Twitter, for some reason, failed,
+the user will be redirect to the URI specified by C<callback_fail>.
 
 =head1 AUTHOR
 
 Alexis Sukrieh, C<< <sukria at sukria.net> >>
 
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-dancer-plugin-auth-twitter at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Dancer-Plugin-Auth-Twitter>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Dancer::Plugin::Auth::Twitter
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Dancer-Plugin-Auth-Twitter>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Dancer-Plugin-Auth-Twitter>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Dancer-Plugin-Auth-Twitter>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Dancer-Plugin-Auth-Twitter/>
-
-=back
-
-
 =head1 ACKNOWLEDGEMENTS
 
+This plugin has been written as a port of
+L<Catalyst::Authentication::Credential::Twitter> written by 
+Jesse Stay.
+  
+This plugin was part of the Perl Dancer Advent Calendar 2010.
 
 =head1 LICENSE AND COPYRIGHT
 
@@ -218,7 +264,4 @@ by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
 
-
 =cut
-
-1; # End of Dancer::Plugin::Auth::Twitter
