@@ -68,6 +68,9 @@ get '/auth/twitter/callback' => sub {
 
     debug "in callback...";
 
+    # A user denying access should be considered a failure
+    return redirect $callback_fail if (params->{'denied'});
+
     if (   !session('request_token')
         || !session('request_token_secret')
         || !params->{'oauth_verifier'})
