@@ -35,7 +35,7 @@ register 'auth_twitter_init' => sub {
             unless $config->{$param};
     }
 
-    warn "new twitter with $consumer_key , $consumer_secret, $callback_url";
+    debug "new twitter with $consumer_key , $consumer_secret, $callback_url";
 
     $_twitter = Net::Twitter->new({ 
         'traits'            => ['API::REST', 'OAuth'],
