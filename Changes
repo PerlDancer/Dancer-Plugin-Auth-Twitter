@@ -3,9 +3,12 @@ Revision history for Dancer-Plugin-Auth-Twitter
 {{$NEXT}}
     [ ENHANCEMENTS ]
     * Auth denied by user now redirects to $callback_fail. GH#2 (Will Orr)
+	* support for both authentication and authorization method. GH#3 (Simon
+         Elsbrock)
 
     [ BUG FIXES ]
     * fix L<> markup in POD. GH#5 (Andreas Koenig, Yanick Champoux)
+	
 
 0.02	2011-01-17
 	
