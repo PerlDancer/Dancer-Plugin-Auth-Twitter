@@ -1,4 +1,6 @@
 package Dancer::Plugin::Auth::Twitter;
+#ABSTRACT: Authenticate with Twitter
+
 use strict;
 use warnings;
 
@@ -6,8 +8,6 @@ use Dancer ':syntax';
 use Dancer::Plugin;
 use Carp 'croak';
 use Net::Twitter;
-
-our $VERSION = 0.02;
 
 # Net::Twitter singleton, accessible via 'twitter'
 my $_twitter;
@@ -35,7 +35,7 @@ register 'auth_twitter_init' => sub {
             unless $config->{$param};
     }
 
-    warn "new twitter with $consumer_key , $consumer_secret, $callback_url";
+    debug "new twitter with $consumer_key , $consumer_secret, $callback_url";
 
     $_twitter = Net::Twitter->new({ 
         'traits'            => ['API::REST', 'OAuth'],
@@ -45,8 +45,8 @@ register 'auth_twitter_init' => sub {
 
 };
 
-# define a route handler that bounces to the OAuth authentication process
-register 'auth_twitter_authenticate_url' => sub {
+# define a route handler that bounces to the OAuth authorization process
+register 'auth_twitter_authorize_url' => sub {
     if (not defined twitter) {
         croak "auth_twitter_init must be called first";
     }
@@ -64,9 +64,31 @@ register 'auth_twitter_authenticate_url' => sub {
     return $uri;
 };
 
+# define a route handler that bounces to the OAuth authentication process
+register 'auth_twitter_authenticate_url' => sub {
+    if (not defined twitter) {
+        croak "auth_twitter_init must be called first";
+    }
+
+    my $uri = twitter->get_authentication_url(
+        'callback' => $callback_url
+    );
+
+    session request_token        => twitter->request_token;
+    session request_token_secret => twitter->request_token_secret;
+    session access_token         => '';
+    session access_token_secret  => '';
+
+    debug "auth URL : $uri";
+    return $uri;
+};
+
 get '/auth/twitter/callback' => sub {
 
     debug "in callback...";
+
+    # A user denying access should be considered a failure
+    return redirect $callback_fail if (params->{'denied'});
 
     if (   !session('request_token')
         || !session('request_token_secret')
@@ -119,9 +141,7 @@ get '/auth/twitter/callback' => sub {
 register_plugin;
 
 __END__
-=head1 NAME
 
-Dancer::Plugin::Auth::Twitter - Authenticate with Twitter
 
 =head1 SYNOPSIS
 
@@ -192,7 +212,7 @@ the plugin to store the authenticated user's information.
 
 Use the session backend of your choice, it doesn't make a difference, see
 L<Dancer::Session> for details about supported session engines, or
-L<http://search.cpan.org/search?query=Dancer-Session|search the CPAN for new ones>.
+L<search the CPAN for new ones|http://search.cpan.org/search?query=Dancer-Session>.
 
 =back
 
@@ -211,9 +231,9 @@ This function should be called before your route handlers, in order to
 initialize the underlying L<Net::Twitter> object. It will read your
 configuration and create a new L<Net::Twitter> instance.
 
-=head2 auth_twitter_authenticate_url
+=head2 auth_twitter_authorize_url
 
-This function returns an authenticate URI for redirecting unauthenticated users.
+This function returns an authorize URI for redirecting unauthenticated users.
 You should use this in a before filter like the following:
 
     before sub {
@@ -221,12 +241,21 @@ You should use this in a before filter like the following:
         return if request->path =~ m{/auth/twitter/callback};
     
         if (not session('twitter_user')) {
-            redirect auth_twitter_authenticate_url();
+            redirect auth_twitter_authorize_url();
         }
     };
 
 When the user authenticate with Twitter's OAuth interface, she's going to be
 bounced back to C</auth/twitter/callback>.
+
+=head2 auth_twitter_authenticate_url
+
+Similar to auth_twitter_authorize_url, but this function instead returns an
+authenticate instead of authorize URI for redirecting unauthenticated users,
+which results in a slightly different behaviour.
+
+See L<https://dev.twitter.com/pages/sign_in_with_twitter|here> to learn about
+the differences.
 
 =head1 ROUTE HANDLERS
 
@@ -239,12 +268,8 @@ authenticated herself with Twitter's OAuth. The route handler saves tokens and
 user information in the session and then redirects the user to the URI
 specified by C<callback_success>.  
 
-If the validation of the token returned by Twitter, for some reason, failed,
+If the validation of the token returned by Twitter failed or was denied,
 the user will be redirect to the URI specified by C<callback_fail>.
-
-=head1 AUTHOR
-
-Alexis Sukrieh, C<< <sukria at sukria.net> >>
 
 =head1 ACKNOWLEDGEMENTS
 
@@ -254,14 +279,5 @@ Jesse Stay.
   
 This plugin was part of the Perl Dancer Advent Calendar 2010.
 
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2010 Alexis Sukrieh.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
 
 =cut

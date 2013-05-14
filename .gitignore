@@ -16,3 +16,4 @@ t/sessions/
 tags
 blib/
 pm_to_blib
+Dancer-Plugin-Auth-Twitter-0.0*
