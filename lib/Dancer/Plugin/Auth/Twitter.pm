@@ -68,6 +68,9 @@ get '/auth/twitter/callback' => sub {
 
     debug "in callback...";
 
+    # A user denying access should be considered a failure
+    return redirect $callback_fail if (params->{'denied'});
+
     if (   !session('request_token')
         || !session('request_token_secret')
         || !params->{'oauth_verifier'})
@@ -239,7 +242,7 @@ authenticated herself with Twitter's OAuth. The route handler saves tokens and
 user information in the session and then redirects the user to the URI
 specified by C<callback_success>.  
 
-If the validation of the token returned by Twitter, for some reason, failed,
+If the validation of the token returned by Twitter failed or was denied,
 the user will be redirect to the URI specified by C<callback_fail>.
 
 =head1 AUTHOR
