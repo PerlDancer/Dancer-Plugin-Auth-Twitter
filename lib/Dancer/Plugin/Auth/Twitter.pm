@@ -192,7 +192,7 @@ the plugin to store the authenticated user's information.
 
 Use the session backend of your choice, it doesn't make a difference, see
 L<Dancer::Session> for details about supported session engines, or
-L<http://search.cpan.org/search?query=Dancer-Session|search the CPAN for new ones>.
+L<search the CPAN for new ones|http://search.cpan.org/search?query=Dancer-Session>.
 
 =back
 
