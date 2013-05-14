@@ -1,4 +1,6 @@
 package Dancer::Plugin::Auth::Twitter;
+#ABSTRACT: Authenticate with Twitter
+
 use strict;
 use warnings;
 
@@ -6,8 +8,6 @@ use Dancer ':syntax';
 use Dancer::Plugin;
 use Carp 'croak';
 use Net::Twitter;
-
-our $VERSION = 0.02;
 
 # Net::Twitter singleton, accessible via 'twitter'
 my $_twitter;
@@ -141,9 +141,7 @@ get '/auth/twitter/callback' => sub {
 register_plugin;
 
 __END__
-=head1 NAME
 
-Dancer::Plugin::Auth::Twitter - Authenticate with Twitter
 
 =head1 SYNOPSIS
 
@@ -273,10 +271,6 @@ specified by C<callback_success>.
 If the validation of the token returned by Twitter failed or was denied,
 the user will be redirect to the URI specified by C<callback_fail>.
 
-=head1 AUTHOR
-
-Alexis Sukrieh, C<< <sukria at sukria.net> >>
-
 =head1 ACKNOWLEDGEMENTS
 
 This plugin has been written as a port of
@@ -285,14 +279,5 @@ Jesse Stay.
   
 This plugin was part of the Perl Dancer Advent Calendar 2010.
 
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2010 Alexis Sukrieh.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
 
 =cut

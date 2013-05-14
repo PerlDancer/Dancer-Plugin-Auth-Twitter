@@ -14,3 +14,4 @@ logs
 TestApp
 t/sessions/
 tags
+Dancer-Plugin-Auth-Twitter-0.0*
