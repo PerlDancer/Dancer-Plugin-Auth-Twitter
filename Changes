@@ -1,6 +1,16 @@
 Revision history for Dancer-Plugin-Auth-Twitter
 
-{{$NEXT}}
+0.04    2013-06-06
+
+    [ ENHANCEMENTS ]
+    * Use v1.1 of the Twitter API REST (v1 is phased out by Twitter 
+        on June 11th). GH#7 (Vyacheslav Matyukhin)
+
+    [ BUG FIXES ]
+    * Was using 'core()', which is not exported. GH#8 (Vyacheslav Matyukhin)
+
+0.03    2013-05-14
+
     [ ENHANCEMENTS ]
     * Auth denied by user now redirects to $callback_fail. GH#2 (Will Orr)
 	* support for both authentication and authorization method. GH#3 (Simon

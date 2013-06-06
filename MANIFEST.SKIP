@@ -1,2 +1,3 @@
 MANIFEST.SKIP
 example
+\.build

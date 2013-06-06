@@ -38,7 +38,7 @@ register 'auth_twitter_init' => sub {
     debug "new twitter with $consumer_key , $consumer_secret, $callback_url";
 
     $_twitter = Net::Twitter->new({ 
-        'traits'            => ['API::REST', 'OAuth'],
+        'traits'            => ['API::RESTv1_1', 'OAuth'],
         'consumer_key'      => $consumer_key, 
         'consumer_secret'   => $consumer_secret,
     });
@@ -123,7 +123,7 @@ get '/auth/twitter/callback' => sub {
     };
 
     if ($@ || !$twitter_user_hash) {
-        core("no twitter_user_hash or error: ".$@);
+        Dancer::Logger::core("no twitter_user_hash or error: ".$@);
         return redirect $callback_fail;
     }
 
