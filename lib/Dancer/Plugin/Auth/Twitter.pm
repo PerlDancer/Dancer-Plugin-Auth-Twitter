@@ -41,6 +41,7 @@ register 'auth_twitter_init' => sub {
         'traits'            => ['API::RESTv1_1', 'OAuth'],
         'consumer_key'      => $consumer_key, 
         'consumer_secret'   => $consumer_secret,
+        ssl                 => 1,
     });
 
 };

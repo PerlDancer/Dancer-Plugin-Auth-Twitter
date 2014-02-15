@@ -1,5 +1,10 @@
 Revision history for Dancer-Plugin-Auth-Twitter
 
+0.06  2014-02-15
+
+    [ BUG FIXES ]
+    * Net::Twitter now needs to have 'SSL => 1'.  (GH#10, reported by berekuk)
+
 0.05    2013-06-06
 
     [ MISC ]
