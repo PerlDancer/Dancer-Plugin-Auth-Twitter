@@ -1,0 +1,40 @@
+---
+abstract: 'Authenticate with Twitter'
+author:
+  - 'Alexis Sukrieh <sukria@sukria.net>'
+  - 'Dancer Core Developers'
+build_requires:
+  ExtUtils::MakeMaker: 0
+  File::Spec: 0
+  File::Spec::Functions: 0
+  IO::Handle: 0
+  IPC::Open3: 0
+  List::Util: 0
+  Module::Build: 0.3601
+  Test::More: 0
+  perl: 5.006
+configure_requires:
+  ExtUtils::MakeMaker: 6.30
+  Module::Build: 0.3601
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 5.012, CPAN::Meta::Converter version 2.120921'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Dancer-Plugin-Auth-Twitter
+provides:
+  Dancer::Plugin::Auth::Twitter:
+    file: lib/Dancer/Plugin/Auth/Twitter.pm
+    version: 0.06
+requires:
+  Carp: 0
+  Dancer: 0
+  Dancer::Plugin: 0
+  Net::Twitter: 4.00001
+  strict: 0
+  warnings: 0
+resources:
+  bugtracker: https://github.com/PerlDancer/Dancer-Plugin-Auth-Twitter
+  repository: https://github.com/PerlDancer/Dancer-Plugin-Auth-Twitter
+version: 0.06

@@ -1,6 +1,6 @@
 package Dancer::Plugin::Auth::Twitter;
 #ABSTRACT: Authenticate with Twitter
-
+$Dancer::Plugin::Auth::Twitter::VERSION = '0.06';
 use strict;
 use warnings;
 
@@ -143,6 +143,15 @@ register_plugin;
 
 __END__
 
+=pod
+
+=head1 NAME
+
+Dancer::Plugin::Auth::Twitter - Authenticate with Twitter
+
+=head1 VERSION
+
+version 0.06
 
 =head1 SYNOPSIS
 
@@ -277,8 +286,28 @@ the user will be redirect to the URI specified by C<callback_fail>.
 This plugin has been written as a port of
 L<Catalyst::Authentication::Credential::Twitter> written by 
 Jesse Stay.
-  
+
 This plugin was part of the Perl Dancer Advent Calendar 2010.
 
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+Alexis Sukrieh <sukria@sukria.net>
+
+=item *
+
+Dancer Core Developers
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Alexis Sukrieh.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
