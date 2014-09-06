@@ -7,7 +7,7 @@ use warnings;
 use Dancer ':syntax';
 use Dancer::Plugin;
 use Carp 'croak';
-use Net::Twitter;
+use Net::Twitter::Lite::WithAPIv1_1;
 
 # Net::Twitter singleton, accessible via 'twitter'
 my $_twitter;
@@ -37,12 +37,11 @@ register 'auth_twitter_init' => sub {
 
     debug "new twitter with $consumer_key , $consumer_secret, $callback_url";
 
-    $_twitter = Net::Twitter->new({ 
-        'traits'            => ['API::RESTv1_1', 'OAuth'],
+    $_twitter = Net::Twitter::Lite::WithAPIv1_1->new(
         'consumer_key'      => $consumer_key, 
         'consumer_secret'   => $consumer_secret,
         ssl                 => 1,
-    });
+    );
 
 };
 
