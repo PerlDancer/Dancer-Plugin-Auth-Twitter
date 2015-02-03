@@ -1,3 +1,4 @@
+dist.ini
 MANIFEST.SKIP
 example
 \.build
