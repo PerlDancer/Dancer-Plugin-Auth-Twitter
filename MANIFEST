@@ -13,9 +13,9 @@ cpanfile
 doap.xml
 lib/Dancer/Plugin/Auth/Twitter.pm
 t/00-compile.t
-t/00-load.t
 t/000-report-versions-tiny.t
-t/manifest.t
+t/basic-app.t
+t/lib/MyApp.pm
 xt/pod-coverage.t
 xt/pod.t
 xt/release/unused-vars.t
