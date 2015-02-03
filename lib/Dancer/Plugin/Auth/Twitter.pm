@@ -290,6 +290,16 @@ specified by C<callback_success>.
 If the validation of the token returned by Twitter failed or was denied,
 the user will be redirect to the URI specified by C<callback_fail>.
 
+=head1 TIPS AND TRICKS
+
+If you get the error
+
+    Net::Twitter::Role::OAuth::get_authorization_url(): 
+        GET https://api.twitter.com/oauth/request_token failed: 500 
+        Can't verify SSL peers without knowing which Certificate Authorities to trust
+
+you can silence it by setting the environment variable C<PERL_LWP_SSL_VERIFY_HOSTNAME> to C<0>.
+
 =head1 ACKNOWLEDGEMENTS
 
 This plugin has been written as a port of

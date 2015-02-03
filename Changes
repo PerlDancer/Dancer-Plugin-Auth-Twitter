@@ -6,6 +6,9 @@ Revision history for Dancer-Plugin-Auth-Twitter
     * Replace default engine to be Net::Twitter::Lite.
         (GH#15, odyniec)
 
+    [ DOCUMENTATION ]
+    * Add note about 'can't verify ssl peer'. (GH#16)
+
     [ MISC ]
     * Add tests. (GH#17, odyniec)
 
