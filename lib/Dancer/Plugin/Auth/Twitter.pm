@@ -1,6 +1,9 @@
 package Dancer::Plugin::Auth::Twitter;
+BEGIN {
+  $Dancer::Plugin::Auth::Twitter::AUTHORITY = 'cpan:SUKRIA';
+}
 #ABSTRACT: Authenticate with Twitter
-
+$Dancer::Plugin::Auth::Twitter::VERSION = '0.07';
 use strict;
 use warnings;
 
@@ -154,6 +157,17 @@ register_plugin;
 
 __END__
 
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Dancer::Plugin::Auth::Twitter - Authenticate with Twitter
+
+=head1 VERSION
+
+version 0.07
 
 =head1 SYNOPSIS
 
@@ -305,8 +319,28 @@ you can silence it by setting the environment variable C<PERL_LWP_SSL_VERIFY_HOS
 This plugin has been written as a port of
 L<Catalyst::Authentication::Credential::Twitter> written by 
 Jesse Stay.
-  
+
 This plugin was part of the Perl Dancer Advent Calendar 2010.
 
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+Alexis Sukrieh <sukria@sukria.net>
+
+=item *
+
+Dancer Core Developers
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2010 by Alexis Sukrieh.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
