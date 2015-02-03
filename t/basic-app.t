@@ -1,20 +1,15 @@
 use strict;
 use warnings;
 
+use lib 't/lib';
+
 use Dancer::Test;
 use HTTP::Request::Common;
-use Test::MockObject;
+use Test::MockObject::Extends;
 use Test::More import => ['!pass'];
+use Class::Load qw/ try_load_class /;
 
-# Mock Net::Twitter
-my $twitter = Test::MockObject->new;
-$twitter->fake_new('Net::Twitter');
-$twitter->set_always(get_authentication_url => 'https://twitter.burp/auth');
-$twitter->set_always(request_token => 'request_token');
-$twitter->set_always(request_token_secret => 'request_token_secret');
-$twitter->set_always(request_access_token => 'request_access_token');
-$twitter->set_always(access_token => 'access_token');
-$twitter->set_always(access_token_secret => 'access_token_secret');
+use MyApp;
 
 my %user = (
     id => 'bumblebee',
@@ -22,65 +17,51 @@ my %user = (
     access_token_secret => 'def456',
 );
 
-$twitter->mock('verify_credentials' => sub {
-    return \%user;
-});
+for my $engine ( qw/ Net::Twitter Net::Twitter::Lite::WithAPIv1_1 / ) {
+    subtest "engine $engine" => sub {
+        plan skip_all => "test needs module $engine" 
+            unless try_load_class($engine);
 
-{
-    use Dancer;
-    use Dancer::Plugin::Auth::Twitter;
+        MyApp::change_engine($engine);
+        my $twitter = MyApp::twitter();
 
-    config->{plugins}->{'Auth::Twitter'} = {
-        consumer_key        => 'consumer_key',
-        consumer_secret     => 'consumer_secret',
-        callback_url        => 'http://localhost:3000/auth/twitter/callback',
-        callback_success    => '/success',
-        callback_fail       => '/fail',
+        $twitter = Test::MockObject::Extends->new($twitter);
+
+        $twitter->set_always(get_authentication_url => 'https://twitter.burp/auth');
+        $twitter->set_always(request_token => 'request_token');
+        $twitter->set_always(request_token_secret => 'request_token_secret');
+        $twitter->set_always(request_access_token => 'request_access_token');
+        $twitter->set_always(access_token => 'access_token');
+        $twitter->set_always(access_token_secret => 'access_token_secret');
+        $twitter->mock('verify_credentials' => sub { return \%user });
+
+        $Dancer::Plugin::Auth::Twitter::_twitter = $twitter;
+
+        dancer_response GET => '/clear';
+
+        my $resp;
+
+        $resp = dancer_response GET => '/';
+        response_redirect_location_is $resp, $twitter->get_authentication_url,
+            'Unauthenticated access redirects to authentication URL';
+
+        ok defined MyApp::session('request_token'), 'Request token is stored in session';
+
+        # Failed authentication
+        $resp = dancer_response GET => '/auth/twitter/callback?denied=1';
+        response_redirect_location_is $resp, 'http://localhost/fail',
+            'Failed authentication redirects to callback_fail URL';
+
+        # Successful authentication
+        $resp = dancer_response GET => '/auth/twitter/callback?oauth_verifier=1';
+        response_redirect_location_is $resp, 'http://localhost/success',
+            'Successful authentication redirects to callback_success';
+
+        is_deeply MyApp::session('twitter_user'), \%user,
+            'Twitter user data is stored in session';
+
     };
-    config->{session} = 'Simple';
-
-    auth_twitter_init();
-     
-    hook before => sub {
-        return if request->path =~ m{/auth/twitter/callback};
-
-        if (not session('twitter_user')) {
-            redirect auth_twitter_authenticate_url;
-        }
-    };
-     
-    get '/' => sub {
-        'This is index.'
-    };
-
-    get '/success' => sub {
-        'Welcome, ' . session('twitter_user')->{'screen_name'};
-    };
-     
-    get '/fail' => sub { 'FAIL' };
-
-    true;
 }
 
-my $resp;
-
-$resp = dancer_response GET => '/';
-response_redirect_location_is $resp, $twitter->get_authentication_url,
-    'Unauthenticated access redirects to authentication URL';
-
-ok defined session('request_token'), 'Request token is stored in session';
-
-# Failed authentication
-$resp = dancer_response GET => '/auth/twitter/callback?denied=1';
-response_redirect_location_is $resp, 'http://localhost/fail',
-    'Failed authentication redirects to callback_fail URL';
-
-# Successful authentication
-$resp = dancer_response GET => '/auth/twitter/callback?oauth_verifier=1';
-response_redirect_location_is $resp, 'http://localhost/success',
-    'Successful authentication redirects to callback_success';
-
-is_deeply session('twitter_user'), \%user,
-    'Twitter user data is stored in session';
 
 done_testing;

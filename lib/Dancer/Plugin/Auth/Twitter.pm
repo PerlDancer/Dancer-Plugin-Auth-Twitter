@@ -7,11 +7,11 @@ use warnings;
 use Dancer ':syntax';
 use Dancer::Plugin;
 use Carp 'croak';
-use Class::Load;
+use Class::Load qw/ load_class /;
 use Net::Twitter::Lite::WithAPIv1_1 0.12006;
 
 # Net::Twitter singleton, accessible via 'twitter'
-my $_twitter;
+our $_twitter;
 sub twitter { $_twitter }
 register 'twitter' => \&twitter;
 
@@ -41,13 +41,12 @@ register 'auth_twitter_init' => sub {
 
     debug "new twitter with $consumer_key , $consumer_secret, $callback_url";
 
-    $engine ||= $config->{engine} 
-            ||  'Net::Twitter::Lite::WithAPIv1_1';
+    $engine = $config->{engine} || 'Net::Twitter::Lite::WithAPIv1_1';
 
     $engine .= '::WithAPIv1_1' if $engine eq 'Net::Twitter::Lite';
 
-    die "engine must be 'Net::Twitter' or 'Net::Twitter::Lite': '$engine' not supported\n"
-        unless grep { $engine eq $_ } qw/ Net::Twitter Net::Twitter::Lite /;
+    die "engine must be 'Net::Twitter' or 'Net::Twitter::Lite::WithAPIv1_1': '$engine' not supported\n"
+        unless grep { $engine eq $_ } qw/ Net::Twitter Net::Twitter::Lite::WithAPIv1_1 /;
 
     $_twitter = load_class($engine)->new(
         ( traits => [ qw/ API::RESTv1_1 OAuth / ] ) x ( $engine eq 'Net::Twitter' ),
