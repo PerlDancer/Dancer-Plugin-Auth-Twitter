@@ -7,7 +7,8 @@ use warnings;
 use Dancer ':syntax';
 use Dancer::Plugin;
 use Carp 'croak';
-use Net::Twitter;
+use Class::Load;
+use Net::Twitter::Lite::WithAPIv1_1 0.12006;
 
 # Net::Twitter singleton, accessible via 'twitter'
 my $_twitter;
@@ -21,8 +22,11 @@ my $callback_url;
 my $callback_success;
 my $callback_fail;
 
+my $engine;
+
 register 'auth_twitter_init' => sub {
     my $config = plugin_setting;
+
     $consumer_secret = $config->{consumer_secret};
     $consumer_key    = $config->{consumer_key};
     $callback_url    = $config->{callback_url};
@@ -37,12 +41,20 @@ register 'auth_twitter_init' => sub {
 
     debug "new twitter with $consumer_key , $consumer_secret, $callback_url";
 
-    $_twitter = Net::Twitter->new({ 
-        'traits'            => ['API::RESTv1_1', 'OAuth'],
+    $engine ||= $config->{engine} 
+            ||  'Net::Twitter::Lite::WithAPIv1_1';
+
+    $engine .= '::WithAPIv1_1' if $engine eq 'Net::Twitter::Lite';
+
+    die "engine must be 'Net::Twitter' or 'Net::Twitter::Lite': '$engine' not supported\n"
+        unless grep { $engine eq $_ } qw/ Net::Twitter Net::Twitter::Lite /;
+
+    $_twitter = load_class($engine)->new(
+        ( traits => [ qw/ API::RESTv1_1 OAuth / ] ) x ( $engine eq 'Net::Twitter' ),
         'consumer_key'      => $consumer_key, 
         'consumer_secret'   => $consumer_secret,
-        ssl                 => 1,
-    });
+         ssl                 => 1,
+    );
 
 };
 
@@ -199,9 +211,15 @@ C<plugins/Auth::Twitter>:
         callback_url:     "http://localhost:3000/auth/twitter/callback"
         callback_success: "/"
         callback_fail:    "/fail"
+        engine:           Net::Twitter::Lite::WithAPIv1_1
 
 C<callback_success> and C<callback_fail> are optional and default to 
 '/' and '/fail', respectively.
+
+The engine is optional as well. The supported engines are
+C<Net::Twitter> and C<Net::Twitter::Lite::WithAPIv1_1> (C<Net::Twitter::Lite> can also 
+be used as a synonym for the latter).
+By default the plugin will use L<Net::Twitter::Lite::WithAPIv1_1>.
 
 Note that you also need to provide your callback url, whose route handler is automatically
 created by the plugin.
@@ -223,14 +241,15 @@ The plugin exports the following symbols to your application's namespace:
 
 =head2 twitter
 
-The plugin uses a L<Net::Twitter> object to do its job. You can access this
+The plugin uses a L<Net::Twitter> or L<Net::Twitter::Lite::WithAPIv1_1> 
+object to do its job. You can access this
 object with the C<twitter> symbol, exported by the plugin.
 
 =head2 auth_twitter_init
 
 This function should be called before your route handlers, in order to
-initialize the underlying L<Net::Twitter> object. It will read your
-configuration and create a new L<Net::Twitter> instance.
+initialize the underlying L<Net::Twitter> or L<Net::Twitter::Lite::WithAPIv1_1> 
+object. 
 
 =head2 auth_twitter_authorize_url
 

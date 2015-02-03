@@ -1,5 +1,11 @@
 Revision history for Dancer-Plugin-Auth-Twitter
 
+{{$NEXT}}
+
+    [ ENHANCEMENTS ]
+    * Replace default engine to be Net::Twitter::Lite.
+        (GH#15, odyniec)
+
 0.06  2014-02-15
 
     [ BUG FIXES ]
