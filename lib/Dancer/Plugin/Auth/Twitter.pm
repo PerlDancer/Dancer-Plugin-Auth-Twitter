@@ -126,7 +126,7 @@ get '/auth/twitter/callback' => sub {
         return redirect $callback_success;
     }
     else {
-        # user did NOT autheticate/authorize:
+        # user did NOT authenticate/authorize:
         session request_token        => '';
         session request_token_secret => '';
         return redirect $callback_fail if $denied; # user denied access
@@ -214,7 +214,7 @@ final steps and log your user.
 
 C<callback_success> and C<callback_fail> are optional and default to 
 '/' and '/fail', respectively. Once the callback_url processes the
-authetication/authorization returned by Twitter, it will redirect the user
+authentication/authorization returned by Twitter, it will redirect the user
 to those routes.
 
 Before version 0.08, this module allowed the use of either C<Net::Twitter> or
@@ -297,7 +297,7 @@ the user will be redirect to the URI specified by C<callback_fail>.
 =head1 TIPS AND TRICKS
 
 You should probably wrap your calls to C<auth_twitter_authorize_url> and
-C<auth_twitter_autheticate_url> under C<eval>, as they make requests to
+C<auth_twitter_authenticate_url> under C<eval>, as they make requests to
 the Twitter API and may fail.
 
 =head1 ACKNOWLEDGEMENTS
