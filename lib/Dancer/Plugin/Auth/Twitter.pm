@@ -3,7 +3,7 @@ BEGIN {
   $Dancer::Plugin::Auth::Twitter::AUTHORITY = 'cpan:SUKRIA';
 }
 #ABSTRACT: Authenticate with Twitter
-$Dancer::Plugin::Auth::Twitter::VERSION = '0.07';
+$Dancer::Plugin::Auth::Twitter::VERSION = '0.08';
 use strict;
 use warnings;
 
@@ -324,7 +324,7 @@ Dancer Core Developers
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2010 by Alexis Sukrieh.
+This software is copyright (c) 2010-18 by Alexis Sukrieh.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
