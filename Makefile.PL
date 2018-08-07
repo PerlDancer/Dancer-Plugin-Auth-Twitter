@@ -38,7 +38,7 @@ my %WriteMakefileArgs = (
     "Test::More" => "0.88",
     "lib" => 0
   },
-  "VERSION" => "0.07",
+  "VERSION_FROM" => "lib/Dancer/Plugin/Auth/Twitter.pm",
   "test" => {
     "TESTS" => "t/*.t"
   }
